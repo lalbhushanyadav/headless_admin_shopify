@@ -107,6 +107,7 @@ fastify.get('/get-draft-orders', async (req, reply) => {
 	}
 });
 
-fastify.listen({ port: 3001 }, () => {
-	console.log('Fastify running at http://localhost:3001');
-});
+export default async (req, res) => {
+	await fastify.ready();
+	fastify.server.emit('request', req, res);
+};
