@@ -6,7 +6,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const fastify = Fastify();
-fastify.register(cors, { origin: '*' });
+await fastify.register(cors, {
+	origin: 'https://headless-shopify-rust.vercel.app', // Or set to only your frontend domain
+	methods: ['GET', 'POST', 'OPTIONS'],
+	allowedHeaders: ['Content-Type', 'Authorization'],
+	credentials: true
+});
 
 // Root route (to prevent 404 error)
 fastify.get('/', async (req, reply) => {
