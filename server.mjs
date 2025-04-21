@@ -1,7 +1,7 @@
-const Fastify = require('fastify');
-const cors = require('@fastify/cors');
-const axios = require('axios');
-const dotenv = require('dotenv');
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import axios from 'axios';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -38,7 +38,6 @@ fastify.post('/draft-order', async (req, reply) => {
 // Fetch draft orders by email
 fastify.get('/get-draft-orders', async (req, reply) => {
 	const email = req.query.email;
-	// console.log("Requested email:", email); // Debugging email
 
 	try {
 		const query = `
@@ -87,36 +86,21 @@ fastify.get('/get-draft-orders', async (req, reply) => {
 			}
 		);
 
-		// console.log("Shopify API Response:", JSON.stringify(response.data, null, 2)); // Check the full response
-
 		const draftEdges = response?.data?.data?.draftOrders?.edges;
 
 		if (!draftEdges) {
 			return reply.code(500).send({ error: 'Invalid response from Shopify', raw: response.data });
 		}
 
-		// Filter by email (case insensitive)
 		const filteredSorted = draftEdges
 			.map(edge => edge.node)
-			.filter(order => order.email && order.email.toLowerCase() === email.toLowerCase()); // Only filter if email exists
-		// .sort((a, b) => {
-		// 	const aId = parseInt(a.id.split('/').pop());
-		// 	const bId = parseInt(b.id.split('/').pop());
-		// 	return bId - aId;
-		// });
-
-
-		// Log the result to see if any draft orders match the email
-		// console.log("Filtered Orders:", filteredSorted);
+			.filter(order => order.email && order.email.toLowerCase() === email.toLowerCase());
 
 		reply.send({ draftOrders: draftEdges });
 	} catch (err) {
 		reply.code(500).send({ error: 'Failed to fetch draft orders', details: err.message });
 	}
 });
-
-
-
 
 fastify.listen({ port: 3001 }, () => {
 	console.log('Fastify running at http://localhost:3001');
