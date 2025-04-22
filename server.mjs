@@ -6,19 +6,21 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const fastify = Fastify();
+
+// CORS setup (adjust frontend URL as needed)
 await fastify.register(cors, {
-	origin: 'https://headless-shopify-rust.vercel.app', // Or set to only your frontend domain
+	origin: ['http://localhost:5173', 'https://headless-shopify-rust.vercel.app'],
 	methods: ['GET', 'POST', 'OPTIONS'],
 	allowedHeaders: ['Content-Type', 'Authorization'],
 	credentials: true
 });
 
-// Root route (to prevent 404 error)
+// Root route
 fastify.get('/', async (req, reply) => {
 	reply.send({ message: 'Welcome to Shopify Draft Order API!' });
 });
 
-// Draft order creation route
+// Draft order creation
 fastify.post('/draft-order', async (req, reply) => {
 	try {
 		const { query, variables } = req.body;
@@ -91,15 +93,11 @@ fastify.get('/get-draft-orders', async (req, reply) => {
 			}
 		);
 
-		const draftEdges = response?.data?.data?.draftOrders?.edges;
+		const draftEdges = response?.data?.data?.draftOrders?.edges || [];
 
-		if (!draftEdges) {
-			return reply.code(500).send({ error: 'Invalid response from Shopify', raw: response.data });
-		}
-
-		const filteredSorted = draftEdges
+		const filtered = draftEdges
 			.map(edge => edge.node)
-			.filter(order => order.email && order.email.toLowerCase() === email.toLowerCase());
+			.filter(order => order.email?.toLowerCase() === email.toLowerCase());
 
 		reply.send({ draftOrders: draftEdges });
 	} catch (err) {
@@ -107,7 +105,16 @@ fastify.get('/get-draft-orders', async (req, reply) => {
 	}
 });
 
+// Vercel handler
 export default async (req, res) => {
 	await fastify.ready();
 	fastify.server.emit('request', req, res);
 };
+
+// Dev server listener (local only)
+if (process.env.NODE_ENV !== 'production') {
+	fastify.listen({ port: 3001 }, (err, address) => {
+		if (err) throw err;
+		console.log(`Fastify running locally at ${address}`);
+	});
+}
