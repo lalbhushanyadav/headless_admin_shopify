@@ -94,12 +94,12 @@ fastify.get('/get-draft-orders', async (req, reply) => {
 		);
 
 		const draftEdges = response?.data?.data?.draftOrders?.edges || [];
-
-		const filtered = draftEdges
+		// console.log(draftEdges);
+		const sortedOrders = draftEdges
 			.map(edge => edge.node)
-			.filter(order => order.email?.toLowerCase() === email.toLowerCase());
+			.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Descending
 
-		reply.send({ draftOrders: draftEdges });
+		reply.send({ draftOrders: sortedOrders });
 	} catch (err) {
 		reply.code(500).send({ error: 'Failed to fetch draft orders', details: err.message });
 	}
